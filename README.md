@@ -68,7 +68,7 @@ Update `transit_system_config.json` to define:
 ### 2. Run the Simulator
 
 ```
-notebook.ipynb
+test.ipynb
 ```
 
 ### 3. Analyze Outputs
