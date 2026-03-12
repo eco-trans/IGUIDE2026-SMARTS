@@ -68,7 +68,7 @@ Update `transit_system_config.json` to define:
 ### 2. Run the Simulator
 
 ```
-python transit_system.py --config transit_system_config.json
+notebook.ipynb
 ```
 
 ### 3. Analyze Outputs
