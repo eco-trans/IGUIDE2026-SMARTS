@@ -1,4 +1,4 @@
-# SMARTS — Synchronous Multi-Agent Reinforcement Transit Simulator
+# SMARTS — Synchronous Multi Agent Reinforcement-Learning Transit Simulator
 
 SMARTS is a lightweight simulation framework for public transit research. It models vehicles, passengers, stops, routes, and a network topology, enabling experiments with control policies, scheduling strategies, and reinforcement learning agents.
 
@@ -48,7 +48,8 @@ Recommended dependencies:
 * pandas
 * networkx
 * matplotlib
-* shapely (optional)
+* pytorch
+* pytorch geometric
 
 ---
 
