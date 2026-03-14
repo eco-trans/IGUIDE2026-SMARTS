@@ -102,6 +102,8 @@ SMARTS follows a layered architecture:
 * Routes
 * Network topology
 
+<img width="685" height="512" alt="image" src="https://github.com/user-attachments/assets/81576ee7-da3e-4156-a221-2f1f3c4fd2b5" />
+
 **Operational Layer**
 
 * Vehicles
@@ -114,18 +116,19 @@ SMARTS follows a layered architecture:
 * Decision policies
 * Reinforcement learning models
 
+  <img width="685" height="512" alt="image" src="https://github.com/user-attachments/assets/2c65da63-babd-42fc-b0ce-f293b78cb978" />
+
 **Simulation Layer**
 
 * Environment
 * Time‑step updates
 * Reward and observation generation
 
-Diagrams illustrating the architecture and simulation flow can be added below.
-<ul>
-  <li><img width="685" height="512" alt="image" src="https://github.com/user-attachments/assets/2c65da63-babd-42fc-b0ce-f293b78cb978" /></li>
-  <li><img width="685" height="512" alt="image" src="https://github.com/user-attachments/assets/81576ee7-da3e-4156-a221-2f1f3c4fd2b5" /></li>
+<!-- <ul>
+  <li></li>
+  <li></li>
   
-</ul>
+</ul> -->
 
 
 
