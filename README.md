@@ -308,5 +308,3 @@ This project is distributed under the terms of the LICENSE file included in the 
 SMARTS was developed as part of research on reinforcement learning applications for public transportation systems. The simulator aims to provide a flexible experimentation platform for researchers studying adaptive and intelligent transit operations.
 
 ---
-
-*(Architecture diagrams, model illustrations, and simulation screenshots can be inserted below this section.)*
