@@ -121,8 +121,9 @@ SMARTS follows a layered architecture:
 * Reward and observation generation
 
 Diagrams illustrating the architecture and simulation flow can be added below.
-<img width="1237" height="925" alt="image" src="https://github.com/user-attachments/assets/81576ee7-da3e-4156-a221-2f1f3c4fd2b5" />
-<img width="1151" height="847" alt="image" src="https://github.com/user-attachments/assets/2c65da63-babd-42fc-b0ce-f293b78cb978" />
+<img width="685" height="512" alt="image" src="https://github.com/user-attachments/assets/81576ee7-da3e-4156-a221-2f1f3c4fd2b5" />
+
+<img width="685" height="512" alt="image" src="https://github.com/user-attachments/assets/2c65da63-babd-42fc-b0ce-f293b78cb978" />
 
 
 ---
