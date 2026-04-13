@@ -37,7 +37,7 @@ The simulator is designed for reinforcement learning research:
 * Multiple agents can operate simultaneously.
 * Each agent receives system observations.
 * Agents choose actions that affect the system state.
-* Rewards can be defined based on performance metrics such as passenger wait time or service reliability.
+* Rewards can be defined based on performance metrics such as passenger wait time and cost of opperations.
 
 This design allows the study of decentralized or coordinated control strategies.
 
@@ -123,15 +123,6 @@ SMARTS follows a layered architecture:
 * Environment
 * Time‑step updates
 * Reward and observation generation
-
-<!-- <ul>
-  <li></li>
-  <li></li>
-  
-</ul> -->
-
-
-
 ---
 
 # Simulation Workflow
@@ -163,7 +154,7 @@ cd SMARTS
 Install dependencies:
 
 ```
-pip install -r requirements.txt
+This uses the GeoAI environement from I-GUIDE
 ```
 
 Recommended dependencies:
@@ -174,6 +165,7 @@ Recommended dependencies:
 * matplotlib
 * torch
 * torch_geometric
+* gymnasium
 
 ---
 
@@ -189,7 +181,7 @@ Key configuration parameters include:
 
 **Network configuration**
 
-* stop locations
+* range for number of stops
 * route definitions
 * network connectivity
 
@@ -202,7 +194,7 @@ Key configuration parameters include:
 **Passenger demand**
 
 * arrival rates
-* origin–destination patterns
+* demographics
 
 **Simulation parameters**
 
@@ -235,12 +227,8 @@ During simulation the system records operational metrics such as:
 * passenger waiting time
 * vehicle occupancy
 * service frequency
-* travel time
-* system throughput
 
 These metrics can be used to evaluate control strategies or compare different policies.
-
-Generated logs and outputs are saved through the logging module.
 
 ---
 
@@ -249,12 +237,7 @@ Generated logs and outputs are saved through the logging module.
 SMARTS supports visual inspection of simulation results. Typical visualizations include:
 
 * transit network diagrams
-* vehicle trajectories
 * passenger demand patterns
-* simulation snapshots
-
-Example figures of the simulation environment and network structure can be added below.
-
 ---
 
 # Example Experiments
@@ -262,11 +245,9 @@ Example figures of the simulation environment and network structure can be added
 SMARTS can be used to explore a variety of research questions:
 
 * Evaluating fleet size impacts on passenger waiting time
-* Studying vehicle bunching and headway instability
 * Testing dynamic dispatch strategies
 * Comparing rule‑based control with reinforcement learning
 * Investigating adaptive frequency setting
-
 ---
 
 # Extending SMARTS
@@ -275,7 +256,6 @@ Researchers can extend the simulator in several ways:
 
 * Implement new RL agents in `agent.py`
 * Add alternative passenger demand models
-* Integrate graph neural networks for network‑aware control
 * Implement additional performance metrics
 
 Because the codebase is modular, new components can be integrated with minimal changes to existing modules.
