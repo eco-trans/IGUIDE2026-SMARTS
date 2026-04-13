@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GATv2Conv
 from torch.distributions import Categorical
 from env import TransitNetworkEnv
-from copy import deepcopy
+from copy import copy, deepcopy
 
 from logger import TrainingEpisodeLogger
 
@@ -360,12 +360,97 @@ class Model(nn.Module):
             nn.Linear(embed_size, 1),
         )
 
-    def forward(self, x):
+    def forward(self, x, agent_id=None):
         embed = self.feature_extractor(x)
         logits = self.actor(embed).squeeze(-1)
         value_immediate, value_delayed = self.critic_immediate(embed).squeeze(
             -1
         ), self.critic_delayed(embed).squeeze(-1)
+        return logits, value_immediate, value_delayed
+
+
+class SimpleDNNAgent(nn.Module):
+    def __init__(self, _env, embed_size=256, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # agg_pipeline = (
+        #     "mean,sum,sum,sum,"
+        #     + "N,N,N,sum,"
+        #     + "sum,mean,mean,mean,"
+        #     + "mean,max,max,sum,"
+        #     + "sum,sum,sum,N,"
+        #     + "mean,mean,mean,mean,"
+        #     + "mean,mean"
+        # )
+        # self.agg_pipeline = np.array(agg_pipeline.split(","))
+        # self.msk = self.agg_pipeline != "N"
+
+        # self.input_dim = sum(self.msk)
+
+        get_actor = lambda input_dim, num_actions: nn.Sequential(
+            nn.Linear(input_dim, embed_size),
+            nn.ReLU(),
+            nn.Linear(embed_size, embed_size),
+            nn.ReLU(),
+            nn.Linear(embed_size, num_actions),
+        )
+
+        get_critic_delayed = lambda input_dim: nn.Sequential(
+            nn.Linear(input_dim, embed_size),
+            nn.ReLU(),
+            nn.Linear(embed_size, embed_size),
+            nn.ReLU(),
+            nn.Linear(embed_size, 1),
+        )
+
+        get_critic_immediate = lambda input_dim:  nn.Sequential(
+            nn.Linear(input_dim, embed_size),
+            nn.ReLU(),
+            nn.Linear(embed_size, embed_size),
+            nn.ReLU(),
+            nn.Linear(embed_size, 1),
+        )
+
+        env = deepcopy(_env)
+        obs, _ = env.reset(hard_reset=True)
+        actor_list = {agent_id: get_actor(
+            np.concatenate([v.flatten() for v in obs[agent_id].values()]).shape[0],
+            env.action_spaces[agent_id].n,
+        ) for agent_id in obs.keys()}
+
+        critic_delayed_list = {agent_id: get_critic_delayed(
+            np.concatenate([v.flatten() for v in obs[agent_id].values()]).shape[0]
+        ) for agent_id in obs.keys()}
+
+        critic_immediate_list = {agent_id: get_critic_delayed(
+            np.concatenate([v.flatten() for v in obs[agent_id].values()]).shape[0]
+        ) for agent_id in obs.keys()}
+
+        self.actor = nn.ModuleDict(actor_list)
+        self.critic_delayed = nn.ModuleDict(critic_delayed_list)
+        self.critic_immediate = nn.ModuleDict(critic_immediate_list)
+
+        
+
+    def forward(self, x, agent_id):
+        # x = torch.tensor(
+        #     [
+        #         getattr(torch, func)(x["x_route"][:, self.msk][:, i])
+        #         for i, func in enumerate(self.agg_pipeline[self.msk])
+        #     ], device=x["x_route"].device
+        # )
+
+
+        if len(x["x_route"].shape) == 2:
+            dim = 0
+        else:
+            dim = 1
+        x = torch.cat([torch.flatten(v, start_dim=dim)  for v in x.values()], dim=-1)
+
+        logits = self.actor[agent_id](x).squeeze(-1)
+        value_immediate, value_delayed = self.critic_immediate[agent_id](x).squeeze(
+            -1
+        ), self.critic_delayed[agent_id](x).squeeze(-1)
         return logits, value_immediate, value_delayed
 
 
@@ -378,17 +463,27 @@ def fixed_policy(interval):
 
     return wrapped
 
+
 def timetable_to_policy(env, timetable):
     """axis 0  is time and axis 1 is routes"""
-    expanded_timetable = np.zeros((int(env.transit_system_config["hours_of_opperation_per_day"] * 3600
-                                  / env.transit_system_config["analysis_period_sec"]),
-                                  len(env.possible_agents)))
+    expanded_timetable = np.zeros(
+        (
+            int(
+                env.transit_system_config["hours_of_opperation_per_day"]
+                * 3600
+                / env.transit_system_config["analysis_period_sec"]
+            ),
+            len(env.possible_agents),
+        )
+    )
 
     for i in range(len(env.possible_agents)):
         per_period_deployments = []
         for j in range(env.transit_system_config["hours_of_opperation_per_day"]):
             deployments_per_hour = timetable[j, i]
-            expanded_deployments = np.zeros(int(3600/env.transit_system_config["analysis_period_sec"]))
+            expanded_deployments = np.zeros(
+                int(3600 / env.transit_system_config["analysis_period_sec"])
+            )
             for _ in range(int(deployments_per_hour)):
                 ind = np.random.randint(0, expanded_deployments.shape[0])
                 counter = 0
@@ -401,9 +496,11 @@ def timetable_to_policy(env, timetable):
         expanded_timetable[:, i] = np.concatenate(per_period_deployments)
     return expanded_timetable
 
+
 def policy_to_action_at_time(policy, t, s):
     """TxA"""
-    return {f"agent_{i}": a for i, a in enumerate(policy[int(t//s)])}
+    return {f"agent_{i}": a for i, a in enumerate(policy[int(t // s)])}
+
 
 def objective_ftn(env, policy):
     (
@@ -498,6 +595,7 @@ def objective_ftn(env, policy):
 
 def run_simulated_anealing(seed=0, runs=1000):
     env = TransitNetworkEnv({"is_training": True, "seed": seed})
+
     _, _ = env.reset(hard_reset=True)
 
     obj_history = []
@@ -518,7 +616,7 @@ def run_simulated_anealing(seed=0, runs=1000):
 
     final_timetable = timetable.copy()
 
-    for _ in (range(runs)):
+    for _ in range(runs):
         env = TransitNetworkEnv({"is_training": True, "seed": seed})
         _, _ = env.reset(hard_reset=True)
         policy = timetable_to_policy(env, timetable.copy())
@@ -530,15 +628,16 @@ def run_simulated_anealing(seed=0, runs=1000):
                 final_timetable[:, i] = timetable[:, i]
             else:
                 timetable[:, i] = final_timetable[:, i]
-                
+
         obj_history.append(old_objective.copy())
-        
+
         for i in range(objective.shape[0]):
             j = np.random.randint(timetable.shape[0])
-            timetable[j, i] += np.random.randint(1, 50) * (1 if np.random.rand() > 0.5 else -1)
+            timetable[j, i] += np.random.randint(1, 50) * (
+                1 if np.random.rand() > 0.5 else -1
+            )
             timetable[j, i] = max(timetable[j, i], 0)
-        
-    
+
     return final_timetable, obj_history
 
 
@@ -546,6 +645,7 @@ def collect_rollout(
     env, model, rollout_len=1080, device="cpu", hard_reset=True, testing=False
 ):
     obs, _ = env.reset(hard_reset=hard_reset)
+    
     (
         obs_buf,
         action_buf,
@@ -581,7 +681,8 @@ def collect_rollout(
             if isinstance(model, nn.Module):
                 with torch.no_grad():
                     logits, value_imm, value_del = model(
-                        to_device(obs[agent_id], device=device)
+                        to_device(obs[agent_id], device=device),
+                        agent_id
                     )
                     value_buf[agent_id].append(
                         (
@@ -601,7 +702,11 @@ def collect_rollout(
                     action = dist.sample()
 
             elif isinstance(model, dict):
-                action = timetable_to_policy(env, model["policy"])[env.current_time//env.transit_system_config["analysis_period_sec"], index]
+                action = timetable_to_policy(env, model["policy"])[
+                    env.current_time
+                    // env.transit_system_config["analysis_period_sec"],
+                    index,
+                ]
                 # try:
                 #     action = model["policy"][env.current_time//env.transit_system_config["analysis_period_sec"], index]
                 # except:
@@ -654,11 +759,11 @@ def collect_rollout(
                         if bus.num_passengers_served / bus.capacity > 0.90:
                             additional_reward = delta
                         elif bus.num_passengers_served / bus.capacity > 0.50:
-                            additional_reward = delta/2.
+                            additional_reward = delta / 2.0
                         elif bus.num_passengers_served / bus.capacity > 0.10:
                             additional_reward = 0
                         elif bus.num_passengers_served / bus.capacity > 0.0:
-                            additional_reward = -delta/2.
+                            additional_reward = -delta / 2.0
                         else:
                             additional_reward = -delta
                         break
@@ -690,6 +795,24 @@ def collect_rollout(
     #     mean_of_action_1 = sum(mean_of_action_1) / len(mean_of_action_1) if mean_of_action_1 else 0.0
     #     print(f"Mean of action 0: {mean_of_action_0:.2f}, Mean of action 1: {mean_of_action_1 - mean_of_action_0:.2f}")
 
+    ##Rewards scaling
+    # for index, agent_id in enumerate(env.possible_agents, 1):
+    #     mx = np.max([
+    #                 info_buf[agent_id][t]["reward_type_2"]
+    #                 for t in range(len(reward_buf[agent_id]))
+    #             ])
+    #     for t in range(len(reward_buf[agent_id])):
+    #         info_buf[agent_id][t]["reward_type_2"] = info_buf[agent_id][t]["reward_type_2"]/mx if mx > 0 else info_buf[agent_id][t]["reward_type_2"]  
+
+    #     mx = np.max([
+    #                 info_buf[agent_id][t]["reward_type_3"]
+    #                 for t in range(len(reward_buf[agent_id]))
+    #             ])
+        
+    #     for t in range(len(reward_buf[agent_id])):
+    #         info_buf[agent_id][t]["reward_type_3"] = info_buf[agent_id][t]["reward_type_3"]/mx if mx > 0 else info_buf[agent_id][t]["reward_type_3"] 
+
+
     if not testing:
         mean_of_action_0 = np.mean(
             [
@@ -708,6 +831,37 @@ def collect_rollout(
         # print(
         #     f"Mean of action 0: {mean_of_action_0:.2f}, Mean of action 1: {mean_of_action_1 - mean_of_action_0:.2f}"
         # )
+        
+        # import matplotlib.pyplot as plt
+        # plt.figure(figsize=(10, 10))
+        # for index, agent_id in enumerate(env.possible_agents, 1):
+        #     plt.subplot(4, 4, index)
+        #     plt.hist(
+        #         [
+        #             info_buf[agent_id][t]["reward_type_2"]
+        #             for t in range(len(reward_buf[agent_id]))
+        #         ],
+        #         bins=100,
+        #         alpha=0.7,
+        #         label="Action 0 Rewards",
+        #     )
+            
+        # plt.figure(figsize=(10, 10))
+        # for index, agent_id in enumerate(env.possible_agents, 1):
+        #     plt.subplot(4, 4, index)
+        #     plt.hist(
+        #         [
+        #             info_buf[agent_id][t]["reward_type_3"]
+        #             for t in range(len(reward_buf[agent_id]))
+        #         ],
+        #         bins=100,
+        #         alpha=0.7,
+        #         label="Action 1 Rewards",
+        #     )
+        # plt.show()
+
+
+
 
     return (
         obs_buf,
@@ -831,7 +985,8 @@ def ppo_update(
                 logits, new_values_imm, new_values_del = [], [], []
                 for obs in obs_batch_list:
                     _logits, _new_values_imm, _new_values_del = model(
-                        to_device(obs, device=device)
+                        to_device(obs, device=device),
+                        agent_id
                     )
                     logits.append(_logits)
                     new_values_imm.append(_new_values_imm)

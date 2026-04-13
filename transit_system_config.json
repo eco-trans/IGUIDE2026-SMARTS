@@ -23,6 +23,6 @@
     "max_number_of_testing_seeds": 1,
     "analysis_period_days": 1,
     "log_passengers": false,
-    "alpha": 3600.0,
-    "beta": 1.0
+    "alpha": 180.0,
+    "beta": 1.00
 }

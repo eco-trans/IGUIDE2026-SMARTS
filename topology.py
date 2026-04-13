@@ -940,21 +940,21 @@ class Topology:
         total_transit_usres = int(sum(transit_usres))
         total_area = int(sum(area))
 
-        print(f"Number of Nodes: {num_nodes}")
-        print(f"Number of Exits: {num_exits}")
-        print(f"Number of Transfer Nodes: {num_transfers}")
-        print(f"Total Population: {total_population} persons")
-        print(f"Total Transit Users: {total_transit_usres} persons")
-        print(f"Total Area: {total_area} km2")
+        # print(f"Number of Nodes: {num_nodes}")
+        # print(f"Number of Exits: {num_exits}")
+        # print(f"Number of Transfer Nodes: {num_transfers}")
+        # print(f"Total Population: {total_population} persons")
+        # print(f"Total Transit Users: {total_transit_usres} persons")
+        # print(f"Total Area: {total_area} km2")
 
-        ax = plt.subplot(1, 1, 1)
-        pd.DataFrame(
-            {"Population": population, "Area": area, "Transit Users": transit_usres}
-        ).plot(kind="bar", figsize=(30, 6), ax=ax)
-        plt.yscale("log")
-        plt.show()
+        # ax = plt.subplot(1, 1, 1)
+        # pd.DataFrame(
+        #     {"Population": population, "Area": area, "Transit Users": transit_usres}
+        # ).plot(kind="bar", figsize=(30, 6), ax=ax)
+        # plt.yscale("log")
+        # plt.show()
 
-        plt.figure(figsize=(20, 25))
+        # plt.figure(figsize=(20, 25))
         od_mat_i = np.stack(
             [
                 self.get_od_mat_for_time(i)
@@ -976,15 +976,15 @@ class Topology:
         departures = [[od_mat_i[s, i, :].sum() for s in slices] for i in pov]
         arrivals = [[od_mat_i[s, :, i].sum() for s in slices] for i in pov]
 
-        j = 1
-        for i in range(num_pov):
-            plt.subplot(num_pov, 2, j)
-            plt.plot(departures[i], label=f"Departures from {pov[i]}")
-            plt.legend()
-            j += 1
-            plt.subplot(num_pov, 2, j)
-            plt.plot(arrivals[i], label=f"Arrivals to {pov[i]}")
-            j += 1
-            plt.legend()
-        plt.show()
+        # j = 1
+        # for i in range(num_pov):
+        #     plt.subplot(num_pov, 2, j)
+        #     plt.plot(departures[i], label=f"Departures from {pov[i]}")
+        #     plt.legend()
+        #     j += 1
+        #     plt.subplot(num_pov, 2, j)
+        #     plt.plot(arrivals[i], label=f"Arrivals to {pov[i]}")
+        #     j += 1
+        #     plt.legend()
+        # plt.show()
         return departures, arrivals
