@@ -2,19 +2,31 @@
 
 SMARTS (Synchronous Multi‑Agent Reinforcement‑Learning Transit Simulator) is a research‑oriented simulation framework designed to study operational decision making in public transportation systems. The simulator models the core components of a transit system including vehicles, passengers, stops, routes, and network topology. It provides a structured environment for testing scheduling policies, dispatch strategies, and reinforcement learning based control algorithms.
 
-The framework was developed to support experiments in adaptive transit operations where decisions must be made dynamically in response to passenger demand, vehicle locations, and network conditions. SMARTS enables researchers to prototype algorithms and evaluate their performance in a controlled simulation environment.
+The framework was developed to support experiments in adaptive transit operations where decisions must be made dynamically using real-time data in response to passenger demand, vehicle locations, and network conditions. SMARTS enables researchers to prototype algorithms and evaluate their performance in a controlled simulation environment.
 
 ---
 
 # Overview
 
-Public transit systems face complex operational challenges such as irregular passenger demand, vehicle bunching, and inefficient scheduling. Traditional optimization and heuristic approaches often assume static conditions and struggle to adapt in real time. Reinforcement learning offers a promising alternative because agents can learn policies through interaction with the environment.
+Public transportation systems operate in environments that are highly dynamic, uncertain, and time-dependent. Passenger demand fluctuates throughout the day, traffic conditions change unpredictably, and vehicle interactions often lead to emergent issues such as bunching and irregular headways. Traditional transit planning methods typically rely on static schedules or offline optimization, which limits their ability to respond to real-time system changes.
 
-SMARTS provides a simulation environment where multiple agents interact synchronously with a transit network. Each agent observes the state of the system and decides actions such as dispatching vehicles, adjusting service frequency, or responding to demand patterns. The simulator advances in discrete time steps and updates all entities simultaneously, ensuring consistent system dynamics.
+SMARTS (Synchronous Multi-Agent Reinforcement-Learning Transit Simulator) is designed to address this limitation by providing a **real-time, adaptive simulation environment**. The simulator emphasizes synchronized system updates, multi-agent decision-making, and responsive control strategies that reflect real-world transit operations.
 
-The framework is intentionally lightweight and modular so that researchers can easily modify system components or integrate new algorithms.
+The real-time focus of SMARTS enables researchers to study:
 
----
+- How control policies adapt to continuously evolving passenger demand  
+- How delays propagate through the network over time  
+- How vehicle interactions impact service reliability  
+- How multiple agents coordinate under dynamic conditions  
+- How reinforcement learning policies perform in real-time deployment settings  
+
+SMARTS allows experimentation at a fine temporal resolution (e.g., second-by-second or minute-by-minute), closely mimicking real operational environments. This makes it particularly useful for evaluating:
+
+- **Real-time dispatching strategies** (when and where to deploy vehicles)  
+- **Dynamic headway control**  
+- **Demand-responsive transit operations**  
+
+By modeling the full operational loop—passenger generation, vehicle movement, network dynamics, and agent decisions—SMARTS provides a comprehensive platform for studying modern transit challenges using reinforcement learning and advanced control techniques.
 
 # Features
 
@@ -37,7 +49,7 @@ The simulator is designed for reinforcement learning research:
 * Multiple agents can operate simultaneously.
 * Each agent receives system observations.
 * Agents choose actions that affect the system state.
-* Rewards can be defined based on performance metrics such as passenger wait time or service reliability.
+* Rewards can be defined based on performance metrics such as passenger wait time and cost of opperations.
 
 This design allows the study of decentralized or coordinated control strategies.
 
@@ -123,15 +135,6 @@ SMARTS follows a layered architecture:
 * Environment
 * Time‑step updates
 * Reward and observation generation
-
-<!-- <ul>
-  <li></li>
-  <li></li>
-  
-</ul> -->
-
-
-
 ---
 
 # Simulation Workflow
@@ -163,7 +166,7 @@ cd SMARTS
 Install dependencies:
 
 ```
-pip install -r requirements.txt
+This uses the GeoAI environement from I-GUIDE
 ```
 
 Recommended dependencies:
@@ -174,6 +177,7 @@ Recommended dependencies:
 * matplotlib
 * torch
 * torch_geometric
+* gymnasium
 
 ---
 
@@ -189,7 +193,7 @@ Key configuration parameters include:
 
 **Network configuration**
 
-* stop locations
+* range for number of stops
 * route definitions
 * network connectivity
 
@@ -202,7 +206,7 @@ Key configuration parameters include:
 **Passenger demand**
 
 * arrival rates
-* origin–destination patterns
+* demographics
 
 **Simulation parameters**
 
@@ -235,12 +239,8 @@ During simulation the system records operational metrics such as:
 * passenger waiting time
 * vehicle occupancy
 * service frequency
-* travel time
-* system throughput
 
 These metrics can be used to evaluate control strategies or compare different policies.
-
-Generated logs and outputs are saved through the logging module.
 
 ---
 
@@ -249,12 +249,7 @@ Generated logs and outputs are saved through the logging module.
 SMARTS supports visual inspection of simulation results. Typical visualizations include:
 
 * transit network diagrams
-* vehicle trajectories
 * passenger demand patterns
-* simulation snapshots
-
-Example figures of the simulation environment and network structure can be added below.
-
 ---
 
 # Example Experiments
@@ -262,11 +257,9 @@ Example figures of the simulation environment and network structure can be added
 SMARTS can be used to explore a variety of research questions:
 
 * Evaluating fleet size impacts on passenger waiting time
-* Studying vehicle bunching and headway instability
 * Testing dynamic dispatch strategies
 * Comparing rule‑based control with reinforcement learning
 * Investigating adaptive frequency setting
-
 ---
 
 # Extending SMARTS
@@ -275,7 +268,6 @@ Researchers can extend the simulator in several ways:
 
 * Implement new RL agents in `agent.py`
 * Add alternative passenger demand models
-* Integrate graph neural networks for network‑aware control
 * Implement additional performance metrics
 
 Because the codebase is modular, new components can be integrated with minimal changes to existing modules.
